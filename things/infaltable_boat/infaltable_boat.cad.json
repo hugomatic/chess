@@ -1,0 +1,25 @@
+{
+  "schema": "plamp-cad-model/1",
+  "name": "infaltable_boat",
+  "source": "infaltable_boat.scad",
+  "description": "Parametric 14 ft U-shaped inflatable catamaran form with separate 6 in floor and motor transom",
+  "sets": {
+    "scale_hull": {
+      "description": "Printable 1:24 continuous side-and-front inflatable hull"
+    },
+    "scale_floor": {
+      "description": "Printable 1:24 separate 6 in drop-stitch floor"
+    },
+    "scale_transom": {
+      "description": "Printable 1:24 separate motor transom, broad face down"
+    },
+    "assembly": {
+      "description": "Fitted 1:24 hull, floor, and transom reference",
+      "printable": false
+    },
+    "full_size_assembly": {
+      "description": "Full-size dimensional form reference",
+      "printable": false
+    }
+  }
+}

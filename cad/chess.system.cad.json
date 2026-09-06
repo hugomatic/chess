@@ -1,0 +1,60 @@
+{
+  "schema": "plamp-cad-system/1",
+  "name": "chess",
+  "description": "Parametric chess board and drawer",
+  "models": {
+    "chess_board": "things/chess_board/chess_board.cad.json",
+    "infaltable_boat": "things/infaltable_boat/infaltable_boat.cad.json"
+  },
+  "libraries": {},
+  "profiles": {
+    "draft": "cad/profiles/draft.json"
+  },
+  "default_product": "board",
+  "products": {
+    "board": {
+      "description": "Printable chess board and housing, playing face down",
+      "items": [
+        {
+          "model": "chess_board",
+          "set": "chess_board"
+        }
+      ]
+    },
+    "drawer": {
+      "description": "Printable drawer, bottom down",
+      "items": [
+        {
+          "model": "chess_board",
+          "set": "drawer"
+        }
+      ]
+    },
+    "assembly": {
+      "description": "Face-up housing and drawer assembly view",
+      "items": [
+        {
+          "model": "chess_board",
+          "set": "assembly"
+        }
+      ]
+    },
+    "infaltable_boat": {
+      "description": "Separate 1:24 hull, 6 in floor, and motor transom model parts",
+      "items": [
+        {
+          "model": "infaltable_boat",
+          "set": "scale_hull"
+        },
+        {
+          "model": "infaltable_boat",
+          "set": "scale_floor"
+        },
+        {
+          "model": "infaltable_boat",
+          "set": "scale_transom"
+        }
+      ]
+    }
+  }
+}
