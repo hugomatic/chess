@@ -1,0 +1,10 @@
+{
+  "schema": "plamp-cad-model/1",
+  "name": "__CLAW_MODEL__",
+  "source": "__CLAW_MODEL__.scad",
+  "description": "Explicit positive and negative geometry model",
+  "sets": {
+    "__CLAW_MODEL__": {"description": "Printable positive-negative model"},
+    "assembly": {"description": "Initial positive-negative assembly", "printable": false}
+  }
+}

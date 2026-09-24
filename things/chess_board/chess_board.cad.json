@@ -1,0 +1,22 @@
+{
+  "schema": "plamp-cad-model/1",
+  "name": "chess_board",
+  "source": "chess_board.scad",
+  "description": "Chess board with flat-bottom grid grooves, top and bottom drawer guides, rear snap detents, and a flush 27.5 mm drawer",
+  "sets": {
+    "chess_board": {
+      "description": "Board and open-bottom housing with 45-degree top ramps and rear snap detents, playing face down"
+    },
+    "assembly": {
+      "description": "Face-up housing and drawer; drawer_open controls extension",
+      "printable": false
+    },
+    "interference": {
+      "description": "Closed-position housing/drawer Boolean intersection; should render empty",
+      "printable": false
+    },
+    "drawer": {
+      "description": "27.5 mm drawer, bottom down, with matching top bevels, rear detent dimples, and bottom revision engraving"
+    }
+  }
+}

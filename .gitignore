@@ -1,0 +1,11 @@
+.venv/
+*.egg-info/
+__pycache__/
+*.py[cod]
+/data/
+/cad/*.lock
+*.stl
+*.3mf
+*.dxf
+*.log
+*.manifest.json
