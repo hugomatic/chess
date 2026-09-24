@@ -21,7 +21,10 @@ class CadSystemTests(unittest.TestCase):
         self.assertEqual(system.default_product, "board")
         self.assertTrue(all(product.description.strip() for product in system.products.values()))
         expected_items = {
-            "board": (("chess_board", "chess_board", None),),
+            "board": (
+                ("chess_board", "chess_board", None),
+                ("chess_board", "drawer", None),
+            ),
             "drawer": (("chess_board", "drawer", None),),
             "assembly": (("chess_board", "assembly", None),),
             "infaltable_boat": (

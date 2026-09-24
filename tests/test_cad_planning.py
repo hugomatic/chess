@@ -137,7 +137,7 @@ class CadPlanningTests(unittest.TestCase):
             {model_id: f"test-{model_id}" for model_id in system.models},
         )
         self.assertEqual(tuple((job.model_id, job.set_name) for job in plan.jobs),
-                         (("chess_board", "chess_board"),))
+                         (("chess_board", "chess_board"), ("chess_board", "drawer")))
         self.assertEqual(plan.jobs[0].product_paths, (("board",),))
 
     def system(self, *, products=None, default_product=None):

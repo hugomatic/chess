@@ -125,11 +125,14 @@ def geometry_define_argv(job: object, revision: str) -> tuple[str, ...]:
         "-D", f"revision_string={serialize_scad_value(revision)}",
         "-D", f"set={serialize_scad_value(getattr(job, 'set_name'))}"
     ]
+    # The generator owns this value. Model defaults (usually "dev") and
+    # user defines must not append a later -D assignment that hides the
+    # selected source revision in the engraved label.
     for name, value in getattr(job, "variables").items():
-        if name != "set":
+        if name not in {"set", "revision_string"}:
             arguments.extend(("-D", f"{name}={serialize_scad_value(value)}"))
     for name, expression in getattr(job, "raw_defines").items():
-        if name != "set":
+        if name not in {"set", "revision_string"}:
             arguments.extend(("-D", f"{name}={expression}"))
     return tuple(arguments)
 

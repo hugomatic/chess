@@ -13,11 +13,15 @@
   "default_product": "board",
   "products": {
     "board": {
-      "description": "Printable chess board and housing, playing face down",
+      "description": "Printable chess board and housing plus its drawer",
       "items": [
         {
           "model": "chess_board",
           "set": "chess_board"
+        },
+        {
+          "model": "chess_board",
+          "set": "drawer"
         }
       ]
     },

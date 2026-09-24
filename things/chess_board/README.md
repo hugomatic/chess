@@ -26,7 +26,7 @@ printing. Its text size defaults to 5.5 mm.
 To export with the CAD generator:
 
 ```bash
-uv run chess cad generate chess_board --system chess --set chess_board --json
+uv run chess cad generate --system chess --product board --json
 ```
 
 Direct OpenSCAD export:
