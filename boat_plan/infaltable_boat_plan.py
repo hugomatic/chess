@@ -14,7 +14,7 @@ Output: boat_plan/infaltable_boat_plan.dxf
 
 from __future__ import annotations
 
-from math import hypot, radians, tan
+from math import atan2, degrees, hypot, radians, tan
 from pathlib import Path
 
 import ezdxf
@@ -43,6 +43,11 @@ BOW_ANGLE_START_Y = BOW_FRONT_Y - TUBE_CENTER_X
 BOW_CORNER_X = BOW_FLAT / 2.0
 BOW_CENTER_Z = BOW_HEIGHT - TUBE_RADIUS
 BOW_RISE_START_Y = BOW_FRONT_Y - BOW_RISE_LENGTH
+KNUCKLE_CENTER_Z = (
+    TUBE_RADIUS
+    + (BOW_ANGLE_START_Y - BOW_RISE_START_Y) / BOW_RISE_LENGTH * (BOW_HEIGHT - TUBE_DIAMETER)
+)
+KNUCKLE_TOP_Z = KNUCKLE_CENTER_Z + TUBE_RADIUS
 TRANSOM_Y = TUBE_RADIUS + TRANSOM_INSET
 FLOOR_REAR_Y = TRANSOM_Y
 FLOOR_FRONT_Y = BOW_FRONT_Y - TUBE_RADIUS
@@ -162,6 +167,36 @@ def _offset_segment(
     return (p1[0] + nx * dist, p1[1] + ny * dist), (p2[0] + nx * dist, p2[1] + ny * dist)
 
 
+def _intersect_lines(
+    a1: tuple[float, float],
+    a2: tuple[float, float],
+    b1: tuple[float, float],
+    b2: tuple[float, float],
+) -> tuple[float, float]:
+    x1, y1 = a1
+    x2, y2 = a2
+    x3, y3 = b1
+    x4, y4 = b2
+    den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+    if abs(den) < 1e-9:
+        raise ValueError("hull offsets are parallel")
+    t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den
+    return (x1 + t * (x2 - x1), y1 + t * (y2 - y1))
+
+
+def _add_short_arc(msp, mapper, center, radius, p_start, p_end, attribs: dict) -> None:
+    c = mapper(*center)
+    a0 = degrees(atan2(mapper(*p_start)[1] - c[1], mapper(*p_start)[0] - c[0])) % 360.0
+    a1 = degrees(atan2(mapper(*p_end)[1] - c[1], mapper(*p_end)[0] - c[0])) % 360.0
+    if (a1 - a0) % 360.0 > 180.0:
+        a0, a1 = a1, a0
+    msp.add_arc(c, radius, a0, a1, dxfattribs=attribs)
+
+
+def _add_top_arc(msp, center, p_start, p_end, attribs: dict) -> None:
+    _add_short_arc(msp, top_xy, center, TUBE_RADIUS, p_start, p_end, attribs)
+
+
 def _stadium_along_x(msp, center, length: float, width: float, attribs: dict) -> None:
     cx, cy = center
     radius = width / 2.0
@@ -259,7 +294,7 @@ def _draw_side(msp, dimstyle: str) -> None:
         _stadium_along_x(
             msp, side_xy(handle_y, TUBE_RADIUS), HANDLE_LENGTH, HANDLE_STOCK * 2.0, hardware
         )
-    _d_ring(msp, side_xy(BOW_FRONT_Y, BOW_HEIGHT), "up", hardware)
+    _d_ring(msp, side_xy(BOW_FRONT_Y, BOW_HEIGHT - TUBE_DIAMETER), "down", hardware)
 
     msp.add_lwpolyline(
         [
@@ -305,7 +340,7 @@ def _draw_side(msp, dimstyle: str) -> None:
     )
     _linear(
         msp, dimstyle,
-        side_xy(0.0, 0.0), side_xy(0.0, TUBE_DIAMETER),
+        side_xy(TUBE_RADIUS, 0.0), side_xy(TUBE_RADIUS, TUBE_DIAMETER),
         (-DIM2, TUBE_RADIUS),
         angle=90,
     )
@@ -365,29 +400,38 @@ def _draw_top(msp, dimstyle: str) -> None:
     stbd_inner = _offset_segment(*starboard_angle, TUBE_RADIUS, left=True)
     port_outer = _offset_segment(*port_angle, TUBE_RADIUS, left=True)
     port_inner = _offset_segment(*port_angle, TUBE_RADIUS, left=False)
+    knuckle_stbd = (TUBE_CENTER_X, BOW_ANGLE_START_Y)
+    knuckle_port = (-TUBE_CENTER_X, BOW_ANGLE_START_Y)
+    corner_stbd = (BOW_CORNER_X, BOW_FRONT_Y)
+    corner_port = (-BOW_CORNER_X, BOW_FRONT_Y)
+    outer_front_stbd = (BOW_CORNER_X, BOAT_LENGTH)
+    outer_front_port = (-BOW_CORNER_X, BOAT_LENGTH)
+    inner_front = ((-HALF_WIDTH, FLOOR_FRONT_Y), (HALF_WIDTH, FLOOR_FRONT_Y))
+    stbd_inner_knuckle = _intersect_lines(
+        (HALF_CHANNEL, TUBE_RADIUS), (HALF_CHANNEL, BOW_FRONT_Y), *stbd_inner
+    )
+    port_inner_knuckle = _intersect_lines(
+        (-HALF_CHANNEL, TUBE_RADIUS), (-HALF_CHANNEL, BOW_FRONT_Y), *port_inner
+    )
+    stbd_inner_bow = _intersect_lines(*stbd_inner, *inner_front)
+    port_inner_bow = _intersect_lines(*port_inner, *inner_front)
 
     msp.add_line(ty(-HALF_WIDTH, TUBE_RADIUS), ty(-HALF_WIDTH, BOW_ANGLE_START_Y), dxfattribs=hull)
     msp.add_line(ty(HALF_WIDTH, TUBE_RADIUS), ty(HALF_WIDTH, BOW_ANGLE_START_Y), dxfattribs=hull)
+    _add_top_arc(msp, knuckle_port, (-HALF_WIDTH, BOW_ANGLE_START_Y), port_outer[0], hull)
+    _add_top_arc(msp, knuckle_stbd, (HALF_WIDTH, BOW_ANGLE_START_Y), stbd_outer[0], hull)
     msp.add_line(ty(*port_outer[0]), ty(*port_outer[1]), dxfattribs=hull)
     msp.add_line(ty(*stbd_outer[0]), ty(*stbd_outer[1]), dxfattribs=hull)
-    msp.add_line(ty(-BOW_CORNER_X, BOAT_LENGTH), ty(BOW_CORNER_X, BOAT_LENGTH), dxfattribs=hull)
-    msp.add_line(ty(-HALF_CHANNEL, TUBE_RADIUS), ty(-HALF_CHANNEL, BOW_ANGLE_START_Y), dxfattribs=hull)
-    msp.add_line(ty(HALF_CHANNEL, TUBE_RADIUS), ty(HALF_CHANNEL, BOW_ANGLE_START_Y), dxfattribs=hull)
-    msp.add_line(ty(*port_inner[0]), ty(*port_inner[1]), dxfattribs=hull)
-    msp.add_line(ty(*stbd_inner[0]), ty(*stbd_inner[1]), dxfattribs=hull)
-    msp.add_line(ty(-BOW_CORNER_X, FLOOR_FRONT_Y), ty(BOW_CORNER_X, FLOOR_FRONT_Y), dxfattribs=hull)
+    _add_top_arc(msp, corner_port, port_outer[1], outer_front_port, hull)
+    _add_top_arc(msp, corner_stbd, stbd_outer[1], outer_front_stbd, hull)
+    msp.add_line(ty(*outer_front_port), ty(*outer_front_stbd), dxfattribs=hull)
+    msp.add_line(ty(-HALF_CHANNEL, TUBE_RADIUS), ty(*port_inner_knuckle), dxfattribs=hull)
+    msp.add_line(ty(HALF_CHANNEL, TUBE_RADIUS), ty(*stbd_inner_knuckle), dxfattribs=hull)
+    msp.add_line(ty(*port_inner_knuckle), ty(*port_inner_bow), dxfattribs=hull)
+    msp.add_line(ty(*stbd_inner_knuckle), ty(*stbd_inner_bow), dxfattribs=hull)
+    msp.add_line(ty(*port_inner_bow), ty(*stbd_inner_bow), dxfattribs=hull)
     msp.add_arc(ty(-TUBE_CENTER_X, TUBE_RADIUS), TUBE_RADIUS, 90.0, 270.0, dxfattribs=hull)
     msp.add_arc(ty(TUBE_CENTER_X, TUBE_RADIUS), TUBE_RADIUS, 90.0, 270.0, dxfattribs=hull)
-    msp.add_line(ty(-HALF_WIDTH, BOW_ANGLE_START_Y), ty(*port_outer[0]), dxfattribs=hull)
-    msp.add_line(ty(HALF_WIDTH, BOW_ANGLE_START_Y), ty(*stbd_outer[0]), dxfattribs=hull)
-    msp.add_line(ty(-HALF_CHANNEL, BOW_ANGLE_START_Y), ty(*port_inner[0]), dxfattribs=hull)
-    msp.add_line(ty(HALF_CHANNEL, BOW_ANGLE_START_Y), ty(*stbd_inner[0]), dxfattribs=hull)
-    msp.add_arc(ty(-BOW_CORNER_X, BOW_FRONT_Y), TUBE_RADIUS, 270.0, 0.0, dxfattribs=hull)
-    msp.add_arc(ty(BOW_CORNER_X, BOW_FRONT_Y), TUBE_RADIUS, 0.0, 90.0, dxfattribs=hull)
-    msp.add_line(ty(*port_outer[1]), ty(-BOW_CORNER_X, BOAT_LENGTH), dxfattribs=hull)
-    msp.add_line(ty(*stbd_outer[1]), ty(BOW_CORNER_X, BOAT_LENGTH), dxfattribs=hull)
-    msp.add_line(ty(*port_inner[1]), ty(-BOW_CORNER_X, FLOOR_FRONT_Y), dxfattribs=hull)
-    msp.add_line(ty(*stbd_inner[1]), ty(BOW_CORNER_X, FLOOR_FRONT_Y), dxfattribs=hull)
 
     msp.add_lwpolyline(
         [
@@ -442,7 +486,7 @@ def _draw_top(msp, dimstyle: str) -> None:
             )
     _d_ring(msp, ty(0.0, BOW_FRONT_Y), "bow", hardware)
     _note(
-        msp, "D-RING",
+        msp, "D-RING UNDER",
         (BOW_FRONT_Y + DRING_WIDTH + 80.0, TOP_CY),
         height=28.0,
         align=TextEntityAlignment.MIDDLE_CENTER,
@@ -452,7 +496,7 @@ def _draw_top(msp, dimstyle: str) -> None:
     _linear(msp, dimstyle, ty(0.0, 0.0), ty(0.0, BOAT_LENGTH), (BOAT_LENGTH / 2.0, mid_y - HALF_WIDTH - DIM))
     _linear(
         msp, dimstyle,
-        ty(-HALF_WIDTH, 0.0), ty(HALF_WIDTH, 0.0),
+        ty(-HALF_WIDTH, TUBE_RADIUS), ty(HALF_WIDTH, TUBE_RADIUS),
         (-DIM, mid_y),
         angle=90,
     )
@@ -567,10 +611,26 @@ def _draw_back(msp, dimstyle: str) -> None:
         back_xy(-TUBE_CENTER_X, TUBE_RADIUS), TUBE_RADIUS, 270.0, 90.0, dxfattribs=transom
     )
     _stadium_along_x(
-        msp, back_xy(0.0, BOW_CENTER_Z), BOW_FLAT, TUBE_DIAMETER, center
+        msp, back_xy(0.0, BOW_CENTER_Z), BOW_FLAT + TUBE_DIAMETER, TUBE_DIAMETER, center
     )
     msp.add_line(back_xy(0.0, 0.0), back_xy(0.0, BOW_HEIGHT), dxfattribs=center)
-    _d_ring(msp, back_xy(0.0, BOW_HEIGHT), "up", {"layer": "HARDWARE"})
+    for side in (-1.0, 1.0):
+        msp.add_line(
+            back_xy(side * TUBE_CENTER_X, TUBE_DIAMETER),
+            back_xy(side * TUBE_CENTER_X, KNUCKLE_TOP_Z),
+            dxfattribs=center,
+        )
+        msp.add_line(
+            back_xy(side * TUBE_CENTER_X, KNUCKLE_TOP_Z),
+            back_xy(side * BOW_CORNER_X, BOW_HEIGHT),
+            dxfattribs=center,
+        )
+    msp.add_line(
+        back_xy(-BOW_CORNER_X, BOW_HEIGHT),
+        back_xy(BOW_CORNER_X, BOW_HEIGHT),
+        dxfattribs=center,
+    )
+    _d_ring(msp, back_xy(0.0, BOW_HEIGHT - TUBE_DIAMETER), "down", {"layer": "HARDWARE"})
 
     _linear(
         msp, dimstyle,

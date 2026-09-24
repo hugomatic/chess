@@ -20,16 +20,29 @@ _chess_remove_path_entry() {
 
 _chess_setup_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 _chess_old_root="${CHESS_ROOT:-}"
+_plamp_old_root="${PLAMP_ROOT:-}"
+
+if ! uv sync --project "$_chess_setup_dir"; then
+  printf 'Failed to sync Chess dependencies with uv.\n' >&2
+  return 1 2>/dev/null || exit 1
+fi
 
 if [[ -n "$_chess_old_root" ]]; then
   _chess_remove_path_entry "$_chess_old_root/.venv/bin"
   _chess_remove_path_entry "$_chess_old_root"
 fi
 
+if [[ -n "$_plamp_old_root" ]]; then
+  _chess_remove_path_entry "$_plamp_old_root/bin"
+  _chess_remove_path_entry "$_plamp_old_root/.venv/bin"
+  _chess_remove_path_entry "$_plamp_old_root"
+fi
+
 _chess_remove_path_entry "$_chess_setup_dir/.venv/bin"
 _chess_remove_path_entry "$_chess_setup_dir"
 
 export CHESS_ROOT="$_chess_setup_dir"
+unset PLAMP_ROOT PLAMP_DATA_DIR
 if [[ -n "${1:-}" ]]; then
   case "$1" in
     /*) export CHESS_DATA_DIR="$1" ;;
@@ -44,5 +57,5 @@ hash -r
 printf 'CHESS_ROOT=%s\n' "$CHESS_ROOT"
 printf 'CHESS_DATA_DIR=%s\n' "$CHESS_DATA_DIR"
 
-unset _chess_setup_dir _chess_old_root
+unset _chess_setup_dir _chess_old_root _plamp_old_root
 unset -f _chess_remove_path_entry

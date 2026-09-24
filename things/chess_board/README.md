@@ -6,14 +6,14 @@ positive/negative modules, set selector, and companion CAD metadata.
 Open `chess_board.scad` in OpenSCAD. `chess_board` exports the board and housing,
 `drawer` exports the separate drawer, and `assembly` shows them together. Dimensions are in millimetres.
 
-Defaults: 27 mm squares, 5 mm border, 4 mm thickness, 226 mm overall width.
+Defaults: 20 mm squares, 5 mm border, 4 mm thickness, 170 mm overall width.
 Change `square_size`, `border_width`, and `board_thickness` to suit your
 pieces and printer. Allow additional bed space for any brim.
 
 All 64 squares share one flat playing surface. The grid and its perimeter
 use 1 mm-wide, flat-bottom grooves (`groove_width`) that are 1 mm deep
 (`groove_depth`). `square_size` is the grid pitch; the default flat square
-interior is 26 mm wide. Colour contrast requires painting or a slicer colour
+interior is 19 mm wide. Colour contrast requires painting or a slicer colour
 workflow.
 
 The `chess_board` set places the playing face down at Z=0 for printing;

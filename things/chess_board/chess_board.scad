@@ -4,7 +4,7 @@ $fn = render_fn;
 set = "chess_board"; // [chess_board, drawer, assembly, interference]
 revision_string = "dev";
 
-square_size = 27;
+square_size = 20;
 border_width = 5;
 board_thickness = 4;
 groove_width = 1;

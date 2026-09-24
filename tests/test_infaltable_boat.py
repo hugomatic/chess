@@ -29,13 +29,20 @@ class InfaltableBoatContractTests(unittest.TestCase):
         )
         expected = {
             "boat_length": 4267.2,
-            "overall_width": 1600.2,
+            "overall_width": 1828.8,
             "tube_diameter": 457.2,
             "floor_thickness": 152.4,
+            "bow_height": 609.6,
+            "bow_rise_length": 914.4,
+            "bow_flat": 304.8,
+            "transom_inset": 609.6,
             "model_scale": 0.0416666667,
-            "transom_width": 685.8,
-            "transom_height": 381,
+            "transom_width": 1371.6,
+            "transom_height": 457.2,
             "transom_thickness": 38.1,
+            "transom_motor_drop": 152.4,
+            "transom_motor_angle": 30,
+            "transom_motor_flat": 304.8,
             "print_flat": 0.6,
         }
         self.assertEqual({key: model.source_defaults[key] for key in expected}, expected)
@@ -83,19 +90,19 @@ class InfaltableBoatGeometryTests(unittest.TestCase):
             self.assertAlmostEqual(observed, wanted, delta=delta)
 
     def test_scale_hull_is_seven_inches_long_with_exact_plan_width(self):
-        self.assert_size(self.render("scale_hull"), (66.675, 177.8, 18.45))
+        self.assert_size(self.render("scale_hull"), (76.2, 177.8, 24.8))
 
     def test_scale_floor_is_a_separate_six_inch_thick_part(self):
-        self.assert_size(self.render("scale_floor"), (28.575, 149.225, 6.35))
+        self.assert_size(self.render("scale_floor"), (38.1, 123.825, 6.35))
 
     def test_scale_transom_is_separate_and_print_oriented(self):
-        self.assert_size(self.render("scale_transom"), (28.575, 15.875, 1.5875))
+        self.assert_size(self.render("scale_transom"), (57.15, 19.05, 1.5875))
 
     def test_assembly_is_a_fitted_one_twenty_fourth_reference(self):
-        self.assert_size(self.render("assembly"), (66.675, 177.8, 22.225), delta=0.2)
+        self.assert_size(self.render("assembly"), (79.9, 177.8, 25.4), delta=0.3)
 
     def test_full_size_assembly_retains_nominal_envelope(self):
-        self.assert_size(self.render("full_size_assembly"), (1600.2, 4267.2, 533.4), delta=1.0)
+        self.assert_size(self.render("full_size_assembly"), (1917.7, 4267.2, 609.6), delta=1.0)
 
 
 if __name__ == "__main__":

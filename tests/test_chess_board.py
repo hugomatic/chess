@@ -21,7 +21,7 @@ class ChessBoardContractTests(unittest.TestCase):
             ("chess_board", "drawer", "assembly", "interference"),
         )
         self.assertFalse(model.sets["interference"].printable)
-        self.assertEqual(model.source_defaults["square_size"], 27)
+        self.assertEqual(model.source_defaults["square_size"], 20)
         self.assertEqual(model.source_defaults["groove_width"], 1)
         self.assertEqual(model.source_defaults["groove_depth"], 1)
         self.assertEqual(model.source_defaults["drawer_height"], 27.5)
